@@ -24,23 +24,13 @@ defmodule FunPipelinex do
   end
 
   defmacro pipe_through(pipelines, do: block) do
-    in_pipelines = H.get_pipelines(pipelines, :in)
-    out_pipelines = H.get_pipelines(pipelines, :out)
-
-    block
-    |> Parser.parse_fun()
-    |> Enum.map(fn fun ->
-      %{f: f, a: a, guard: guard, block: block} = fun
-      exec_f = H.make_exec_fun_name(f)
-
+    fn f, a, guard, exec_f, block ->
       quote do
         def unquote(f)(unquote_splicing(a)) when unquote(guard) do
           with(
-            filters <- @filters,
             curr_m <- __MODULE__,
             args <- unquote(H.make_args(a)),
-            in_filters <- H.get_filters(filters, unquote(in_pipelines)) |> H.fmt_filters(curr_m),
-            out_filters <- H.get_filters(filters, unquote(out_pipelines)) |> H.fmt_filters(curr_m)
+            {in_filters, out_filters} <- H.get_filters(@filters, unquote(pipelines), curr_m)
           ) do
             args
             |> Executor.run_by_args(in_filters, curr_m, unquote(f))
@@ -52,6 +42,7 @@ defmodule FunPipelinex do
           unquote(block)
         end
       end
-    end)
+    end
+    |> H.generate_funs(block)
   end
 end

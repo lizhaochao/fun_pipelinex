@@ -1,10 +1,22 @@
 defmodule FunPipelinex.Helper do
   @moduledoc false
 
+  alias FunPipelinex.Parser
   alias FunPipelinex.Helper, as: Self
 
   @exec_fun_name_suffix "_exec__macro"
 
+  def generate_funs(funs_quote_expr, block) do
+    block
+    |> Parser.parse_fun()
+    |> Enum.map(fn fun ->
+      %{f: f, a: a, guard: guard, block: block} = fun
+      exec_f = make_exec_fun_name(f)
+      funs_quote_expr.(f, a, guard, exec_f, block)
+    end)
+  end
+
+  ###
   def make_exec_fun_name(f), do: String.to_atom("#{f}#{@exec_fun_name_suffix}")
 
   def make_m_name([_ | _] = term),
@@ -15,6 +27,17 @@ defmodule FunPipelinex.Helper do
   def get_pipelines(_other_pipelines, _key), do: []
 
   ###
+  def get_filters(filters, pipelines, curr_m) do
+    with(
+      in_pipelines <- get_pipelines(pipelines, :in),
+      out_pipelines <- get_pipelines(pipelines, :out),
+      in_filters <- filters |> get_filters(in_pipelines) |> fmt_filters(curr_m),
+      out_filters <- filters |> get_filters(out_pipelines) |> fmt_filters(curr_m)
+    ) do
+      {in_filters, out_filters}
+    end
+  end
+
   def get_filters(filters, [_ | _] = pipelines) when is_list(filters) do
     pipelines
     |> Enum.map(fn pipeline ->
@@ -27,7 +50,7 @@ defmodule FunPipelinex.Helper do
   def get_filters(filters, pipeline) when is_list(filters) and is_atom(pipeline),
     do: get_filters(filters, [pipeline])
 
-  def get_filters(_filters, _curr_m), do: []
+  def get_filters(_, _), do: []
 
   def fmt_filters(filters, curr_m) when is_list(filters) and is_atom(curr_m) do
     Enum.map(filters, fn module_or_fun ->
@@ -40,7 +63,7 @@ defmodule FunPipelinex.Helper do
     end)
   end
 
-  def fmt_filters(_filters, _curr_m), do: []
+  def fmt_filters(_, _), do: []
 
   ###
   def make_args(a_expr) do
