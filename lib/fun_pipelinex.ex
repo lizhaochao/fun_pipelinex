@@ -3,7 +3,6 @@ defmodule FunPipelinex do
   fun_pipelinex is a package which filter function's args and return value by your custom Filters.
   """
 
-  alias FunPipelinex.Helper
   alias FunPipelinex.Parser
 
   defmacro __using__(_opts) do
@@ -17,7 +16,7 @@ defmodule FunPipelinex do
 
   defmacro pipeline(name, do: block) do
     block
-    |> Helper.parse_filters()
+    |> Parser.parse_filters()
     |> Enum.map(fn filter ->
       quote do
         @filters {unquote(name), unquote(filter)}

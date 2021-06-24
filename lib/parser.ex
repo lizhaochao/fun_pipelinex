@@ -1,7 +1,8 @@
 defmodule FunPipelinex.Parser do
   @moduledoc false
 
-  alias FunPipelinex.Error
+  alias FunPipelinex.{Error, Helper}
+
   @allowed_fun_types [:def]
   @not_support_types [:@, :defmodule, :use, :require, :import, :alias]
 
@@ -53,4 +54,16 @@ defmodule FunPipelinex.Parser do
 
   defp do_parse_fun({type, _, [_ | _]}, _parts), do: raise(Error, "not support #{type}")
   defp do_parse_fun(_other_expr, _parts), do: raise(Error, "unknown function")
+
+  ###
+  def parse_filters({:__block__, _, filter_expr}), do: do_parse_filters(filter_expr, [])
+  def parse_filters(filter_expr), do: do_parse_filters([filter_expr], [])
+
+  def do_parse_filters([], filters), do: Enum.dedup(filters)
+
+  def do_parse_filters([{:filter, _, [{:__aliases__, _, term}]} | rest], filters),
+    do: do_parse_filters(rest, [Helper.make_m_name(term) | filters])
+
+  def do_parse_filters([{:filter, _, [f_name]} | rest], filters) when is_atom(f_name),
+    do: do_parse_filters(rest, [f_name | filters])
 end
