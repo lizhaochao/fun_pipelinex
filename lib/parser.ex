@@ -1,6 +1,7 @@
 defmodule FunPipelinex.Parser do
   @moduledoc false
 
+  alias FunPipelinex.Error
   @allowed_fun_types [:def]
   @not_support_types [:@, :defmodule, :use, :require, :import, :alias]
 
@@ -50,6 +51,6 @@ defmodule FunPipelinex.Parser do
     |> Map.put(:a, [])
   end
 
-  defp do_parse_fun({type, _, [_ | _]}, _parts), do: raise("not support #{type}")
-  defp do_parse_fun(_other_expr, _parts), do: raise("unknown function")
+  defp do_parse_fun({type, _, [_ | _]}, _parts), do: raise(Error, "not support #{type}")
+  defp do_parse_fun(_other_expr, _parts), do: raise(Error, "unknown function")
 end
