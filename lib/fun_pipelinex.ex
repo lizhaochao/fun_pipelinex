@@ -49,6 +49,7 @@ defmodule FunPipelinex do
 
   # Implements filters in independent module.
   defmodule ArgsChecker do
+    # NOTICE: function name & arity must be the following example.
     def call(args) do
       # if you change args, it doesn't matter, passing it to next filter.
       {:ok, args}
