@@ -3,13 +3,12 @@ defmodule FunPipelinex do
   fun_pipelinex is a package which filter function's args and return value by your custom Filters.
   """
 
-  alias FunPipelinex.Parser
+  alias FunPipelinex.{Executor, Parser}
+  alias FunPipelinex.Helper, as: H
 
   defmacro __using__(_opts) do
     quote do
       Module.register_attribute(__MODULE__, :filters, accumulate: true)
-
-      require Logger
       import unquote(__MODULE__), only: [pipeline: 2, pipe_through: 2]
     end
   end
@@ -25,15 +24,31 @@ defmodule FunPipelinex do
   end
 
   defmacro pipe_through(pipelines, do: block) do
-    in_pipelines = Keyword.get(pipelines, :in, nil)
-    out_pipelines = Keyword.get(pipelines, :out, nil)
-    funs = Parser.parse_fun(block)
+    in_pipelines = H.get_pipelines(pipelines, :in)
+    out_pipelines = H.get_pipelines(pipelines, :out)
 
-    Enum.map(funs, fn fun ->
+    block
+    |> Parser.parse_fun()
+    |> Enum.map(fn fun ->
       %{f: f, a: a, guard: guard, block: block} = fun
+      exec_f = H.make_exec_fun_name(f)
 
       quote do
         def unquote(f)(unquote_splicing(a)) when unquote(guard) do
+          with(
+            filters <- @filters,
+            curr_m <- __MODULE__,
+            args <- unquote(H.make_args(a)),
+            in_filters <- H.get_filters(filters, unquote(in_pipelines)) |> H.fmt_filters(curr_m),
+            out_filters <- H.get_filters(filters, unquote(out_pipelines)) |> H.fmt_filters(curr_m)
+          ) do
+            args
+            |> Executor.run_by_args(in_filters, curr_m, unquote(f))
+            |> Executor.run_by_resp(out_filters)
+          end
+        end
+
+        def unquote(exec_f)(unquote_splicing(a)) when unquote(guard) do
           unquote(block)
         end
       end
