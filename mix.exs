@@ -6,7 +6,7 @@ defmodule FunPipelinex.MixProject do
   @gitee_repo_url "https://gitee.com/lizhaochao/fun_pipelinex"
   @github_repo_url "https://github.com/lizhaochao/fun_pipelinex"
 
-  @version "0.1.0"
+  @version "1.0.0"
 
   def project do
     [
