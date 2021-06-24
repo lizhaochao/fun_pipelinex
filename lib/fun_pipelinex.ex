@@ -6,7 +6,7 @@ defmodule FunPipelinex do
   alias FunPipelinex.Helper
   alias FunPipelinex.Parser
 
-  defmacro __using__(_options) do
+  defmacro __using__(_opts) do
     quote do
       Module.register_attribute(__MODULE__, :filters, accumulate: true)
 
