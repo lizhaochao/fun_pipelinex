@@ -1,6 +1,8 @@
 defmodule FunPipelinex.Helper do
   @moduledoc false
 
+  require Logger
+
   alias FunPipelinex.Parser
   alias FunPipelinex.Helper, as: Self
 
@@ -88,4 +90,10 @@ defmodule FunPipelinex.Helper do
   defp do_get_arg_names([], names), do: Enum.reverse(names)
   defp do_get_arg_names([{arg, _, _} | rest], names), do: do_get_arg_names(rest, [arg | names])
   defp do_get_arg_names([_other_expr | rest], names), do: do_get_arg_names(rest, names)
+
+  ###
+  def debug_log([_ | _] = content) do
+    log_color = Enum.random([:cyan, :cyan, :cyan, :yellow, :yellow, :white])
+    Logger.log(:debug, fn -> content end, ansi_color: log_color)
+  end
 end

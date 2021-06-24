@@ -32,6 +32,8 @@ defmodule FunPipelinex do
             args <- unquote(H.make_args(a)),
             {in_filters, out_filters} <- H.get_filters(@filters, unquote(pipelines), curr_m)
           ) do
+            H.debug_log(title: :before_run_filters, args: args, in_filters: in_filters, out_filters: out_filters)
+
             args
             |> Executor.run_by_args(in_filters, curr_m, unquote(f))
             |> Executor.run_by_resp(out_filters)

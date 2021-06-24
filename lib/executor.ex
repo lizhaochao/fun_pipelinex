@@ -29,8 +29,10 @@ defmodule FunPipelinex.Executor do
   def do_run([], result), do: result
 
   def do_run([{m, f} | rest], {:ok, term}) do
-    apply(m, f, [term])
-    |> case do
+    result = apply(m, f, [term])
+    Helper.debug_log(title: :run_filter, filter: "#{inspect(m)}.#{f}/1", result: result)
+
+    case result do
       {:ok, _args} = result -> do_run(rest, result)
       err -> do_run([], err)
     end
